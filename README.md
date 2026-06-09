@@ -105,6 +105,16 @@ Expected sample results include:
 - Missing SOP is treated as `Warning`, not `Error`, when `Task` contains `Inspection`, `Trouble Shooting`, or `Troubleshooting`. The Data Quality page explains that SOP may be optional for those tasks and should be verified before customer submission.
 - Excel export formatting now safely handles numeric, blank, NaN, list, tuple, set, and dict values. This fixes `TypeError: object of type 'float' has no len()` during report export.
 
+
+## 2026-06-09 v5 revision notes
+
+- `Master Builder` is now an operator-only function.
+- Operator password: `1801`
+- The `Master Builder` page is blocked until the password is entered.
+- The `Upload` page's `Download Generated Master File` button is also blocked until operator authentication is completed.
+- After authentication, `Operator mode active` is shown in the sidebar and can be locked again with `Lock Operator Mode`.
+- This is a Streamlit UI-level restriction. For public Streamlit Cloud deployment, move the password to `st.secrets` instead of keeping it directly in source code.
+
 ## Generated Reference Master 기능
 
 분석 실행 후 `Upload` 화면 또는 `Master Builder` 메뉴에서 현재 업로드한 PWA Excel 파일 기준의 Reference Master 파일을 다운로드할 수 있습니다.
@@ -127,14 +137,15 @@ Expected sample results include:
 
 1. PWA Excel 파일 업로드
 2. `Run Analysis` 실행
-3. `Download Generated Master File` 또는 `Master Builder > Download Generated Reference Master` 클릭
-4. 다운로드한 Master 파일에서 각 Sheet의 첫 번째 기준 컬럼을 검토/수정
+3. 운영자 비밀번호 `1801` 입력 후 인증
+4. `Download Generated Master File` 또는 `Master Builder > Download Generated Reference Master` 클릭
+5. 다운로드한 Master 파일에서 각 Sheet의 첫 번째 기준 컬럼을 검토/수정
    - Company Sheet: `Company`
    - Worker Sheet: `Worker`
    - Task Sheet: `Task`
    - SOP Sheet: `SOP`
    - Site Sheet: `Site`
-5. 다음 분석 시 이 파일을 `Optional: Upload Reference Master Excel file`에 업로드
+6. 다음 분석 시 이 파일을 `Optional: Upload Reference Master Excel file`에 업로드
 
 주의사항:
 

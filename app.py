@@ -30,6 +30,8 @@ st.set_page_config(page_title="PWA Task Compliance Checker", layout="wide")
 inject_css()
 
 APP_TITLE = "PWA Task / Time Compliance Checker"
+ADMIN_PASSWORD = "1801"
+
 
 
 def _init_state() -> None:
@@ -38,6 +40,7 @@ def _init_state() -> None:
         "sheets": [],
         "excluded_sheets": [],
         "mapping_overrides": {},
+        "admin_authenticated": False,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -51,6 +54,43 @@ def _select_or_none(label: str, options: List[Any], value: Any, key: str):
     selected = st.selectbox(label, display_options, index=idx, key=key)
     return None if selected == "<Auto/None>" else selected
 
+
+
+
+def _operator_access_box(context: str = "Master Builder") -> bool:
+    """Render a lightweight operator password gate for master-file generation.
+
+    This is a UI-level restriction for normal Streamlit use. For public deployments,
+    replace ADMIN_PASSWORD with st.secrets["operator_password"].
+    """
+    if st.session_state.get("admin_authenticated"):
+        return True
+
+    with st.expander(f"Operator Access Required - {context}", expanded=True):
+        st.caption("Master 생성 기능은 운영자 전용입니다. 비밀번호를 입력해야 사용할 수 있습니다.")
+        password = st.text_input(
+            "Operator password",
+            type="password",
+            key=f"operator_password_{context}",
+            placeholder="Enter operator password",
+        )
+        if st.button("Unlock Operator Function", key=f"operator_unlock_{context}", use_container_width=True):
+            if password == ADMIN_PASSWORD:
+                st.session_state.admin_authenticated = True
+                st.success("Operator access unlocked.")
+                st.rerun()
+            else:
+                st.error("Incorrect operator password.")
+    return False
+
+
+def _operator_logout_button() -> None:
+    if st.session_state.get("admin_authenticated"):
+        with st.sidebar:
+            st.success("Operator mode active")
+            if st.button("Lock Operator Mode", use_container_width=True):
+                st.session_state.admin_authenticated = False
+                st.rerun()
 
 def _mapping_ui(file_obj, selected_sheets: List[str]) -> Dict[str, Dict[str, Any]]:
     overrides: Dict[str, Dict[str, Any]] = {}
@@ -183,18 +223,23 @@ def upload_page() -> None:
             )
             st.session_state.results = results
         st.success("Analysis completed.")
-        render_kpis(st.session_state.results["summary"])
-        master_bytes = build_master_file(st.session_state.results.get("normalized"))
-        st.download_button(
-            "Download Generated Master File",
-            data=master_bytes,
-            file_name="pwa_reference_master_generated.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True,
-            help="현재 업로드한 PWA 파일에서 Company, Worker, Task, SOP, Site 기준 Master를 생성합니다.",
-        )
-        show_table(st.session_state.results["violations"], "Detected Violations", height=320)
-        show_table(st.session_state.results["data_quality"], "Data Quality Issues", height=320)
+
+    current_results = st.session_state.get("results")
+    if current_results:
+        render_kpis(current_results["summary"])
+        st.markdown("#### Generated Master File")
+        if _operator_access_box("Upload Generated Master Download"):
+            master_bytes = build_master_file(current_results.get("normalized"))
+            st.download_button(
+                "Download Generated Master File",
+                data=master_bytes,
+                file_name="pwa_reference_master_generated.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+                help="현재 업로드한 PWA 파일에서 Company, Worker, Task, SOP, Site 기준 Master를 생성합니다.",
+            )
+        show_table(current_results["violations"], "Detected Violations", height=320)
+        show_table(current_results["data_quality"], "Data Quality Issues", height=320)
 
 
 def dashboard_page(results: Dict[str, Any]) -> None:
@@ -237,6 +282,8 @@ def normalized_page(results: Dict[str, Any]) -> None:
 
 def master_builder_page(results: Dict[str, Any]) -> None:
     st.header("Master Builder")
+    if not _operator_access_box("Master Builder"):
+        st.stop()
     st.caption("업로드한 PWA Excel 파일의 정규화 데이터를 기준으로 Reference Master 파일을 생성합니다. 생성된 파일은 다음 분석부터 Optional Reference Master Excel file로 업로드하여 오탈자 검증 기준으로 사용할 수 있습니다.")
     normalized = results.get("normalized")
     tables = build_master_tables(normalized)
@@ -285,6 +332,7 @@ def main() -> None:
     _init_state()
     st.title(APP_TITLE)
     st.caption("Upload a PWA task-status workbook and validate roster limits, daily hours, typo warnings, and data quality issues.")
+    _operator_logout_button()
     page = st.sidebar.radio(
         "Menu",
         [
