@@ -56,6 +56,51 @@ def _valid_work_rows(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def _valid_roster_rows(df: pd.DataFrame) -> pd.DataFrame:
+    """Rows eligible for Site+Company roster-limit counting.
+
+    Firmware-update related tasks and Commissioning/site-coordinator rows remain
+    in normalized data and daily-hour checks, but are excluded from roster count.
+    """
+    valid = _valid_work_rows(df)
+    if valid.empty:
+        return valid
+    if "Roster Count Eligible" not in valid.columns:
+        return valid
+    eligible = valid["Roster Count Eligible"].fillna(True).astype(bool)
+    return valid[eligible].copy()
+
+
+def build_roster_exclusions(df: pd.DataFrame) -> pd.DataFrame:
+    cols = [
+        "Status", "Site", "Company", "Company Key", "Worker", "Worker Key", "Task",
+        "Date", "Hours", "Roster Exclusion Reason", "Source Sheet", "Source Row"
+    ]
+    valid = _valid_work_rows(df)
+    if valid.empty or "Roster Count Eligible" not in valid.columns:
+        return pd.DataFrame(columns=cols)
+    excluded = valid[~valid["Roster Count Eligible"].fillna(True).astype(bool)].copy()
+    if excluded.empty:
+        return pd.DataFrame(columns=cols)
+    rows: List[Dict[str, Any]] = []
+    for _, row in excluded.iterrows():
+        rows.append({
+            "Status": "Warning",
+            "Site": row.get("Site", ""),
+            "Company": row.get("Company Original", ""),
+            "Company Key": row.get("Company Normalized", ""),
+            "Worker": row.get("Worker Original", ""),
+            "Worker Key": row.get("Worker Normalized", ""),
+            "Task": row.get("Task Original", ""),
+            "Date": fmt_date(row.get("Date")),
+            "Hours": row.get("Hours", ""),
+            "Roster Exclusion Reason": row.get("Roster Exclusion Reason", ""),
+            "Source Sheet": row.get("Source Sheet", ""),
+            "Source Row": row.get("Source Row", ""),
+        })
+    return status_first(_sort_by_status(pd.DataFrame(rows), ["Site", "Company", "Worker", "Date", "Source Row"]))
+
+
 def _build_first_access(valid: pd.DataFrame) -> pd.DataFrame:
     return (
         valid.groupby(["Site", "Company Normalized", "Worker Normalized"], dropna=False)
@@ -85,7 +130,7 @@ def _violation_date_from_first_access(group: pd.DataFrame) -> Any:
 
 
 def build_roster_check(df: pd.DataFrame) -> pd.DataFrame:
-    valid = _valid_work_rows(df)
+    valid = _valid_roster_rows(df)
     cols = ["Status", "Site", "Company", "Company Key", "Unique Worker Count", "Workers", "First Access Date", "Violation Date", "Review Note"]
     if valid.empty:
         return pd.DataFrame(columns=cols)
@@ -121,7 +166,7 @@ def build_roster_check(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_roster_sequence(df: pd.DataFrame) -> pd.DataFrame:
-    valid = _valid_work_rows(df)
+    valid = _valid_roster_rows(df)
     cols = [
         "Status", "Site", "Company", "Company Key", "Worker", "Worker Key", "First Access Date",
         "Roster Sequence", "Same-Date First Access Count", "Cumulative Count After Date", "Source Rows", "Review Note"

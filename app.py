@@ -21,6 +21,7 @@ from modules.validator import (
     build_daily_hours_check,
     build_data_quality_issues,
     build_roster_check,
+    build_roster_exclusions,
     build_roster_sequence,
     build_violations,
     summarize_results,
@@ -146,6 +147,7 @@ def run_analysis(uploaded_file, master_file, excluded_sheets: List[str], mapping
     masters = load_master_file(master_file) if master_file is not None else {}
     roster_check = build_roster_check(normalized)
     roster_sequence = build_roster_sequence(normalized)
+    roster_exclusions = build_roster_exclusions(normalized)
     daily_hours = build_daily_hours_check(normalized)
     typo_warnings = build_typo_warnings(
         normalized,
@@ -164,6 +166,7 @@ def run_analysis(uploaded_file, master_file, excluded_sheets: List[str], mapping
         "mapping": mapping,
         "roster_check": roster_check,
         "roster_sequence": roster_sequence,
+        "roster_exclusions": roster_exclusions,
         "daily_hours": daily_hours,
         "typo_warnings": typo_warnings,
         "data_quality": data_quality,
@@ -254,8 +257,10 @@ def dashboard_page(results: Dict[str, Any]) -> None:
 
 def roster_page(results: Dict[str, Any]) -> None:
     st.header("PWA Roster Check")
+    st.info("Firmware Update/FW-related tasks and Commissioning site-coordinator rows are excluded from Roster Limit counting, but they remain in Normalized Data and Daily Hours Check.")
     show_table(filter_dataframe(results.get("roster_check"), "roster"), "Site + Company Cumulative Worker Count")
     show_table(filter_dataframe(results.get("roster_sequence"), "sequence"), "Roster First Access Sequence")
+    show_table(filter_dataframe(results.get("roster_exclusions"), "roster_exclusions"), "Rows Excluded from Roster Limit", height=360)
 
 
 def daily_hours_page(results: Dict[str, Any]) -> None:
@@ -325,7 +330,7 @@ def export_page(results: Dict[str, Any]) -> None:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=True,
     )
-    st.caption("Report sheets: Summary, PWA_Roster_Check, Roster_Sequence, Daily_Hours_Check, Violations, Typo_Warnings, Data_Quality_Issues, Normalized_Data, Raw_Data, Column_Mapping")
+    st.caption("Report sheets: Summary, PWA_Roster_Check, Roster_Sequence, Roster_Exclusions, Daily_Hours_Check, Violations, Typo_Warnings, Data_Quality_Issues, Normalized_Data, Raw_Data, Column_Mapping")
 
 
 def main() -> None:

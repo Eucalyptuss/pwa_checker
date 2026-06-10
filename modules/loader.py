@@ -22,6 +22,7 @@ from .normalizer import (
     normalize_worker,
     parse_date,
     parse_hours,
+    roster_exclusion_reason,
 )
 
 
@@ -347,6 +348,7 @@ def _build_record_from_values(
     worker_original = normalize_whitespace(worker)
     work_original = normalize_whitespace(work)
     sop_original = normalize_whitespace(sop)
+    exclusion_reason = roster_exclusion_reason(work_original)
     return {
         "Site": sheet_name,
         "Company Original": company_original,
@@ -355,6 +357,8 @@ def _build_record_from_values(
         "Worker Normalized": normalize_worker(worker_original),
         "Task Original": work_original,
         "Task Normalized": normalize_work(work_original),
+        "Roster Count Eligible": not bool(exclusion_reason),
+        "Roster Exclusion Reason": exclusion_reason,
         "SOP Original": sop_original,
         "SOP Normalized": normalize_sop(sop_original),
         "Date": parsed_date,

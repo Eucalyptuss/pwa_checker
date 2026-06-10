@@ -153,3 +153,17 @@ Expected sample results include:
 - 오탈자가 있는 상태로 Master를 확정하면 이후 검증 기준도 오염됩니다.
 - `Review Status` 컬럼은 검토 편의를 위한 컬럼입니다. 앱의 Master 로딩 기준은 각 Master Sheet의 첫 번째 기준 컬럼입니다.
 - `Worker_By_Company` Sheet는 감사/검토용이며, 현재 typo 기준 Master로 직접 사용되지는 않습니다.
+
+## 2026-06-10 v6 revision notes
+
+- Roster Limit counting now excludes firmware-update related tasks.
+  - Examples: `F/W`, `FW`, `F/W Update`, `FW update`, `Firm ware update`, `Firmware update`, and common misspelling variants such as `Firmeware update`.
+- Roster Limit counting now excludes `Commissioning` task rows.
+  - These rows are treated as site-coordinator records for roster purposes.
+- The excluded rows are not deleted.
+  - They remain in `Normalized Data`.
+  - They remain included in `Daily Hours Check`.
+  - They are listed separately in `Rows Excluded from Roster Limit` and in the exported `Roster_Exclusions` sheet.
+- `Normalized Data` now includes:
+  - `Roster Count Eligible`
+  - `Roster Exclusion Reason`

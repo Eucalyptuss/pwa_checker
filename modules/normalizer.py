@@ -80,10 +80,57 @@ def normalize_work(value: Any) -> str:
     text = normalize_general(value)
     aliases = {
         "FW": "FIRMWARE",
+        "F W": "FIRMWARE",
+        "FWUPDATE": "FIRMWARE UPDATE",
         "FIRMWAREUPDATE": "FIRMWARE UPDATE",
     }
     compact = compact_alnum(text)
     return aliases.get(compact, text)
+
+
+def is_firmware_update_task(value: Any) -> bool:
+    """Return True for firmware-update related tasks excluded from roster count.
+
+    Business terms observed in PWA files include FW, F/W, F/W Update, Firm ware
+    update, and Firmware update.  The function intentionally checks only task
+    text and does not change daily-hour calculations.
+    """
+    text = normalize_general(value)
+    compact = compact_alnum(text)
+    if not compact:
+        return False
+    firmware_markers = {
+        "FW",
+        "FWUPDATE",
+        "FIRMWARE",
+        "FIRMWAREUPDATE",
+        "FIRMEWARE",
+        "FIRMEWAREUPDATE",
+        "FIRMWAR",
+        "FIRMWARUPDATE",
+    }
+    return (
+        compact in firmware_markers
+        or "FIRMWARE" in compact
+        or "FIRMEWARE" in compact
+        or ("FIRM" in compact and "WARE" in compact)
+        or compact.startswith("FW")
+    )
+
+
+def is_commissioning_task(value: Any) -> bool:
+    """Return True when Task marks a site coordinator/commissioning role."""
+    compact = compact_alnum(value)
+    return "COMMISSIONING" in compact
+
+
+def roster_exclusion_reason(task_value: Any) -> str:
+    """Explain why a row is excluded from PWA Roster Limit count."""
+    if is_commissioning_task(task_value):
+        return "Task is Commissioning; treated as site coordinator and excluded from Roster Limit."
+    if is_firmware_update_task(task_value):
+        return "Task is Firmware Update/FW-related work and excluded from Roster Limit."
+    return ""
 
 
 def normalize_sop(value: Any) -> str:
