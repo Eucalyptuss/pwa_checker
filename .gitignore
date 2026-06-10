@@ -1,0 +1,140 @@
+# =========================================================
+# Python
+# =========================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.so
+
+# Python build / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Specific module cache folder
+modules/__pycache__/
+
+# =========================================================
+# Virtual environments
+# =========================================================
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# =========================================================
+# Streamlit
+# =========================================================
+.streamlit/secrets.toml
+.streamlit/secrets.toml.*
+.streamlit/cache/
+.streamlit/logs/
+
+# Keep Streamlit config if needed
+# .streamlit/config.toml
+
+# =========================================================
+# Local environment variables / secrets
+# =========================================================
+.env
+.env.*
+!.env.example
+
+# =========================================================
+# Uploaded / generated PWA files
+# =========================================================
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+*.csv
+
+!sample_pwa_input.xlsx
+!sample_master.xlsx
+!samples/*.xlsx
+!sample_data/*.xlsx
+
+# Generated reports / exports
+exports/
+reports/
+output/
+outputs/
+downloads/
+generated/
+generated_master/
+master_exports/
+
+# =========================================================
+# Logs
+# =========================================================
+*.log
+logs/
+debug.log
+
+# =========================================================
+# Test / coverage
+# =========================================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# =========================================================
+# Jupyter / notebook
+# =========================================================
+.ipynb_checkpoints/
+*.ipynb
+
+# =========================================================
+# IDE / editor
+# =========================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# =========================================================
+# OS files
+# =========================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================================================
+# Windows / Office temp files
+# =========================================================
+~$*.xlsx
+~$*.xls
+~$*.xlsm
+~$*.docx
+~$*.pptx
+
+# =========================================================
+# Local database / cache
+# =========================================================
+*.sqlite
+*.sqlite3
+*.db
+.cache/
+.cache_*/
+tmp/
+temp/
+
+# =========================================================
+# Zip archives
+# =========================================================
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
